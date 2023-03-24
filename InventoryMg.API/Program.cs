@@ -1,4 +1,5 @@
 using InventoryManager.DAL.Entities;
+using InventoryMg.BLL.Extensions;
 using InventoryMg.DAL.Configurations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -29,6 +30,7 @@ namespace InventoryMg.API
                 );
 
             });
+           
 
             builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
             builder.Services.AddAuthentication(options =>
@@ -38,7 +40,7 @@ namespace InventoryMg.API
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 
             })
-                
+
                .AddJwtBearer(jwt =>
                {
                    var key = Encoding.ASCII.GetBytes(builder.Configuration.GetSection("JwtConfig:Secret").Value);
@@ -48,18 +50,18 @@ namespace InventoryMg.API
                    {
                        ValidateIssuerSigningKey = true,
                        IssuerSigningKey = new SymmetricSecurityKey(key),
-                       ValidateIssuer = false,
-                       ValidateAudience = false,
-                       RequireExpirationTime = false,
+                       ValidateIssuer = false, //for development, true when u get to prod
+                       ValidateAudience = false, //for development, true when u get to prod
+                       RequireExpirationTime = false,//for development,  when u get to prod implement refresh token 
                        ValidateLifetime = true
-
-
                    };
                });
 
             builder.Services.AddIdentity<UserProfile, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+
+            builder.Services.RegisterServices();
 
             var app = builder.Build();
 

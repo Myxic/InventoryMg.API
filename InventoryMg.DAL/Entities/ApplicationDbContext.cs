@@ -15,7 +15,6 @@ namespace InventoryManager.DAL.Entities
 
         }
 
-        DbSet<UserProfile> UserProfiles { get; set; }
         DbSet<Product> Products { get; set; }
         DbSet<Sale> Sales { get; set; }
 

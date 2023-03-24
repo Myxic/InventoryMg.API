@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace InventoryManager.DAL.Entities
 {
-    public class UserProfile : IdentityUser
+    public class AppUser : IdentityUser
     {
         public string FullName { get; set; }
         public string Phone { get; set; }

@@ -1,10 +1,5 @@
 ﻿using InventoryManager.DAL.Enums;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace InventoryManager.DAL.Entities
 {
@@ -18,7 +13,7 @@ namespace InventoryManager.DAL.Entities
         public string BrandName { get; set; }
 
         [ForeignKey("UserProfile")]
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
         public UserProfile User { get; set; }
 
         public IList<Sale> Sales { get; set; } = new List<Sale>();

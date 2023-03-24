@@ -1,4 +1,6 @@
-﻿using InventoryMg.BLL.DTOs.Request;
+﻿using InventoryMg.BLL.DTOs;
+using InventoryMg.BLL.DTOs.Request;
+using InventoryMg.BLL.DTOs.Response;
 using InventoryMg.BLL.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,18 +17,63 @@ namespace InventoryMg.API.Controllers
             _authenticationService = authenticationService;
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("Register")]
         public async Task<IActionResult> Register([FromBody] UserRegistration userRegistrationRequestDto)
         {
             if (ModelState.IsValid)
             {
+                AuthResult response = await _authenticationService.CreateUser(userRegistrationRequestDto);
 
+                if (response.Result)
+                {
+                  //  return CreatedAtAction("Register",response);
+                    return Ok(response);
+                }
+
+                return BadRequest(response);
             }
 
-            return BadRequest();
+            return BadRequest(new AuthResult()
+            {
+                Errors = new List<string>()
+                    {
+                    "Invalid payload"
+                    }
+            });
         }
 
-       
+        [HttpPost]
+        [Route("Login")]
+            public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
+        {
+            if (ModelState.IsValid)
+            {
+
+                AuthenticationResponse response = await _authenticationService.UserLogin(loginRequest);
+
+                if (response.FullName != null)
+                {
+                    //  return CreatedAtAction("Register",response);2
+                    return Ok(response);
+                }
+
+                return BadRequest(new AuthResult()
+                {
+                    Errors = new List<string>()
+                    {
+                    "Invalid Email/Password"
+                    }
+                });
+
+            }
+            return BadRequest(new AuthResult() { 
+                    Errors = new List<string>()
+                    {
+                    "Invalid payload"
+                    }
+            });
+        }
+
     }
 }
