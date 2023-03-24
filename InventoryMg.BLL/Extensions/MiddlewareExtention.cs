@@ -1,4 +1,4 @@
-﻿using InventoryManager.DAL.Entities;
+﻿using InventoryMg.DAL.Entities;
 using InventoryMg.BLL.Implementation;
 using InventoryMg.BLL.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TodoList.DAL.Repository;
+using InventoryMg.DAL;
+using InventoryMg.DAL.Repository;
 
 namespace InventoryMg.BLL.Extensions
 {
@@ -18,8 +19,8 @@ namespace InventoryMg.BLL.Extensions
         {
           
            services.AddTransient<IAuthenticationService, AuthenticationService>();
-         //   services.AddTransient<IJwtService, JwtService>();
-            services.AddTransient<IUnitOfWork, UnitOfWork<ApplicationDbContext>>();
+          // services.AddTransient<IJwtService, JwtService>();
+           services.AddTransient<IUnitOfWork, UnitOfWork<ApplicationDbContext>>();
             services.AddTransient<IProductService, ProductService>();
             services.AddTransient<ISalesServices, SalesServices>();
            

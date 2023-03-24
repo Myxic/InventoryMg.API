@@ -6,7 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace TodoList.DAL.Repository
+namespace InventoryMg.DAL.Repository
 {
     public class Repository<T> : IRepository<T> where T : class
     {

@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace TodoList.DAL.Repository;
+namespace InventoryMg.DAL.Repository;
 
 public interface IUnitOfWork
 {

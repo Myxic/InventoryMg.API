@@ -1,4 +1,5 @@
-﻿using InventoryMg.BLL.Interfaces;
+﻿using InventoryMg.BLL.DTOs.Response;
+using InventoryMg.BLL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,5 +10,9 @@ namespace InventoryMg.BLL.Implementation
 {
     public class ProductService : IProductService
     {
+        public IEnumerable<ProductView> GetAllUserProducts(int id)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

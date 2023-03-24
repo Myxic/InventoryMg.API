@@ -1,5 +1,5 @@
-﻿using InventoryManager.DAL.Entities;
-using InventoryManager.DAL.Enums;
+﻿using InventoryMg.DAL.Entities;
+using InventoryMg.DAL.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace InventoryMg.BLL.DTOs.Response

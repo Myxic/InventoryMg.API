@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Query;
 
-namespace TodoList.DAL.Repository;
+namespace InventoryMg.DAL.Repository;
 
 public interface IRepository<T> where T : class
 {

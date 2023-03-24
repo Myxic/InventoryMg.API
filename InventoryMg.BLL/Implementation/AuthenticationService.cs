@@ -1,4 +1,4 @@
-﻿using InventoryManager.DAL.Entities;
+﻿using InventoryMg.DAL.Entities;
 using InventoryMg.BLL.DTOs;
 using InventoryMg.BLL.DTOs.Request;
 using InventoryMg.BLL.DTOs.Response;
@@ -15,15 +15,17 @@ namespace InventoryMg.BLL.Implementation
 {
     public class AuthenticationService : IAuthenticationService
     {
-        private readonly UserManager<AppUser> _userManager;
+        private readonly UserManager<UserProfile> _userManager;
         // private readonly JwtConfig _jwtConfig;
         private readonly IConfiguration _configuration;
+        private readonly RoleManager<AppRole> _roleManager;
 
-        public AuthenticationService(UserManager<AppUser> userManager, IConfiguration configuration)
+        public AuthenticationService(UserManager<UserProfile> userManager, IConfiguration configuration, RoleManager<AppRole> roleManager)
         {
             _userManager = userManager;
             //   _jwtConfig = jwtConfig;
             _configuration = configuration;
+            _roleManager = roleManager;
         }
 
         public async Task<AuthResult> CreateUser(UserRegistration request)
@@ -40,7 +42,7 @@ namespace InventoryMg.BLL.Implementation
                     }
                 };
 
-            AppUser user = new()
+            UserProfile user = new()
             {
                 FullName = request.FirstName + " " + request.LastName,
                 Phone = request.Phone,
@@ -64,6 +66,10 @@ namespace InventoryMg.BLL.Implementation
                 // throw new InvalidOperationException($"Failed to create user: {(result.Errors.FirstOrDefault())?.Description}");
             };
             //generate token
+           await _roleManager.CreateAsync(new AppRole { Name = "Customer", Id= Guid.NewGuid().ToString()});
+            var getRole = _roleManager.Roles.Where(r => r.Name == "Customer").FirstOrDefault();
+          await  _userManager.AddToRoleAsync(user,getRole.Name);
+
             var token = GenerateJwtToken(user);
 
 
@@ -103,7 +109,7 @@ namespace InventoryMg.BLL.Implementation
             
         }
 
-        private string GenerateJwtToken(AppUser user)
+        private string GenerateJwtToken(UserProfile user)
         {
             var JwtTokenHandler = new JwtSecurityTokenHandler();
 

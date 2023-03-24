@@ -1,6 +1,7 @@
-﻿using InventoryManager.DAL.Entities;
+﻿using InventoryMg.DAL.Entities;
 using InventoryMg.BLL.Interfaces;
 using InventoryMg.DAL.Configurations;
+using InventoryMg.DAL.Entities;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;

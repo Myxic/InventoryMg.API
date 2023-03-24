@@ -1,4 +1,4 @@
-using InventoryManager.DAL.Entities;
+using InventoryMg.DAL.Entities;
 using InventoryMg.BLL.Extensions;
 using InventoryMg.DAL.Configurations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -57,7 +57,7 @@ namespace InventoryMg.API
                    };
                });
 
-            builder.Services.AddIdentity<UserProfile, IdentityRole>()
+            builder.Services.AddIdentity<UserProfile, AppRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 

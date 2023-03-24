@@ -1,7 +1,7 @@
-﻿using InventoryManager.DAL.Enums;
+﻿using InventoryMg.DAL.Enums;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace InventoryManager.DAL.Entities
+namespace InventoryMg.DAL.Entities
 {
     public class Sale : BaseEntity
     {

@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InventoryManager.DAL.Entities
+namespace InventoryMg.DAL.Entities
 {
-    public class ApplicationDbContext : IdentityDbContext<UserProfile>
+    public class ApplicationDbContext : IdentityDbContext<UserProfile, AppRole,string>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {

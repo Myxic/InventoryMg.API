@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TodoList.DAL.Repository
+namespace InventoryMg.DAL.Repository
 {
     public class UnitOfWork<TContext> : IUnitOfWork where TContext : DbContext
     {

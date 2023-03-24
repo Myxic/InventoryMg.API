@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InventoryManager.DAL.Enums
+namespace InventoryMg.DAL.Enums
 {
     public enum Category
     {
