@@ -15,7 +15,7 @@ namespace InventoryMg.DAL.Entities
         public UserProfile User { get; set; }
 
         [ForeignKey(nameof(Product))]
-        public int ProductId { get; set; }
+        public Guid ProductId { get; set; }
         public IList<Product> Products { get; set; }
     }
 }

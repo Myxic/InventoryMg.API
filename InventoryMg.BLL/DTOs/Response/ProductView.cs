@@ -6,7 +6,7 @@ namespace InventoryMg.BLL.DTOs.Response
 {
     public class ProductView
     {
-        public int? Id { get; set; }
+        public Guid Id { get; set; }
         [Required, StringLength(50, ErrorMessage = "Product name should be between 5 to 50 characters", MinimumLength = 5)]
         public string Name { get; set; }
         public string? Description { get; set; }
