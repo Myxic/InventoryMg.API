@@ -2,6 +2,7 @@
 using InventoryMg.BLL.DTOs.Response;
 using InventoryMg.BLL.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.IIS.Core;
 
 namespace InventoryMg.API.Controllers
 {
@@ -26,7 +27,7 @@ namespace InventoryMg.API.Controllers
             {
                 return Ok(products);
             }
-            return BadRequest("No product found");
+            return BadRequest();
         }
 
         [HttpPost]
@@ -36,7 +37,7 @@ namespace InventoryMg.API.Controllers
             ProductResult result = await _productService.AddProductAsync(product);
             if (result.Result == false)
             {
-                return BadRequest(result);
+                return BadRequest();
             }
             return Ok(result);
         }
@@ -47,12 +48,37 @@ namespace InventoryMg.API.Controllers
         {
 
             Guid prodId = new Guid(id);
-         ProductView response =  await  _productService.GetProductById(prodId);
-            if(response != null)
+            ProductView response = await _productService.GetProductById(prodId);
+            if (response != null)
             {
                 return Ok(response);
             }
-            return BadRequest("Product not found");
+            return BadRequest();
+        }
+
+        [HttpPost]
+        [Route("update-product-by-id")]
+        public async Task<IActionResult> UpdateProduct([FromBody] ProductView product)
+        {
+            ProductResult result = await _productService.EditProductAsync(product);
+            if (result.Result == false)
+            {
+                return BadRequest();
+            }
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("delete-product-by-id")]
+        public async Task<IActionResult> DeleteProduct(string id)
+        {
+            Guid prodId = new Guid(id);
+            ProductResult result = await _productService.DeleteProductAsync(prodId);
+            if (result.Result)
+            {
+                return Ok(result);
+            }
+            return BadRequest();
         }
     }
 }

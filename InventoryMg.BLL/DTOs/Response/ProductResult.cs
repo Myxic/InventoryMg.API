@@ -10,6 +10,6 @@ namespace InventoryMg.BLL.DTOs.Response
     {
         public List<ProductView> Products { get;set; } 
         public bool Result { get; set; }
-        public List<String> Errors { get; set; }
+        public List<String> Message { get; set; }
     }
 }

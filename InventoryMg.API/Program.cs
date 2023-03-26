@@ -79,6 +79,7 @@ namespace InventoryMg.API
 
 
             app.MapControllers();
+            app.AddGlobalErrorHandler();
 
             app.Run();
         }

@@ -1,14 +1,12 @@
 ﻿using InventoryMg.BLL.DTOs.Request;
 using InventoryMg.BLL.DTOs.Response;
+using InventoryMg.BLL.Exceptions;
 using InventoryMg.BLL.Interfaces;
 using InventoryMg.DAL.Entities;
 using InventoryMg.DAL.Repository;
 using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using KeyNotFoundException = InventoryMg.BLL.Exceptions.KeyNotFoundException;
+using NotImplementedException = InventoryMg.BLL.Exceptions.NotImplementedException;
 
 namespace InventoryMg.BLL.Implementation
 {
@@ -27,43 +25,29 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<ProductResult> AddProductAsync(ProductViewRequest product)
         {
-            try
+            var userExist = await _userManager.FindByIdAsync(product.UserId.ToString());
+
+            if (userExist == null)
+                throw new KeyNotFoundException($"User Id: {product.UserId} does not match with the product");
+
+            var newProd = new Product
             {
-                /* User user = await _userRepo.GetSingleByAsync(u => u.Id == product.UserId, tracking: true);*/
-          var userExist = await  _userManager.FindByIdAsync(product.UserId.ToString());
+                UserId = product.UserId,
+                Name = product.Name,
+                Description = product.Description,
+                Category = product.Category,
+                Quantity = product.Quantity,
+                Price = product.Price,
+                BrandName = product.BrandName
+            };
 
-                if (userExist == null)
-                {
-                    return (new ProductResult()
-                    {
-                        Products = null,
-                        Result = false,
-                        Errors = new List<string>()
-                        {
-                            "User Not Found"
-                        }
-                    });
-                }
+            var createdProduct = await _productRepo.AddAsync(newProd);
 
-
-                var newProd = new Product
+            if (createdProduct != null)
+            {
+                return (new ProductResult()
                 {
-                    UserId = product.UserId,
-                    Name = product.Name,
-                    Description = product.Description,
-                    Category = product.Category,
-                    Quantity = product.Quantity,
-                    Price = product.Price,
-                    BrandName = product.BrandName
-                };
-               
-          var createdProduct =  await _productRepo.AddAsync(newProd);
-           
-                if(createdProduct != null)
-                {
-                    return (new ProductResult()
-                    {
-                        Products = new List<ProductView>()
+                    Products = new List<ProductView>()
                         {
                             new ProductView
                             {
@@ -76,41 +60,82 @@ namespace InventoryMg.BLL.Implementation
                                 Id =  createdProduct.Id
                             }
                         },
-                        Result = true,
-                        Errors = null
-                    });
-                }
-
-                return (new ProductResult()
-                {
-                    Products = null,
-                    Result = false,
-                    Errors = new List<string>()
-                        {
-                            "Something went wrong,Unable to Add Product"
-                        }
-                }); ;
-            }
-            catch (Exception ex)
-            {
-               return (new ProductResult()
-                {
-                    Products = null,
-                    Result = false,
-                    Errors = new List<string>()
-                        {
-                            $"{ex.Message}"
+                    Result = true,
+                    Message = new List<string>() {
+                        "Product was Added Successfully"
                         }
                 });
             }
+
+            throw new NotImplementedException("Something went wrong,Unable to Add Product");
+        }
+
+        public async Task<ProductResult> DeleteProductAsync(Guid prodId)
+        {
+            Product productToDelete = await _productRepo.GetSingleByAsync(p => p.Id == prodId);
+            if (productToDelete == null)
+                throw new NotFoundException($"Invalid product id: {prodId}");
+            await _productRepo.DeleteAsync(productToDelete);
+            return (new ProductResult()
+            {
+                Result = true,
+                Message = new List<string>()
+                    {
+                        "Product has Deleted successful"
+                    },
+
+            });
+
+        }
+
+        public async Task<ProductResult> EditProductAsync(ProductView product)
+        {
+            UserProfile user = await _userManager.FindByIdAsync(product.UserId.ToString());
+            if (user == null)
+                throw new NotFoundException($"User with id: {product.UserId} not found");
+
+            Product userProduct = await _productRepo.GetSingleByAsync(p => p.Id == product.Id);
+
+            if (userProduct != null)
+            {
+
+                userProduct.Name = product.Name;
+                userProduct.Description = product.Description;
+                userProduct.Price = product.Price;
+                userProduct.Quantity = product.Quantity;
+                userProduct.BrandName = product.BrandName;
+                userProduct.Category = product.Category;
+                Product updatedProduct = await _productRepo.UpdateAsync(userProduct);
+                if (updatedProduct != null)
+                {
+                    return new ProductResult()
+                    {
+                        Products = new List<ProductView>
+                        {
+                            product
+                        },
+                        Result = true,
+                        Message = new List<string>()
+                        {
+                            "Here are your Products"
+                        }
+
+                    };
+                }
+                throw new NotImplementedException("Unbale to update product");
+            }
+            throw new NotFoundException($"Product with id: {product.Id} not found");
         }
 
         public async Task<IEnumerable<ProductView>> GetAllUserProducts(string id)
         {
-         UserProfile user = await  _userManager.FindByIdAsync(id);
+            UserProfile user = await _userManager.FindByIdAsync(id);
             if (user == null)
-                throw new Exception("User not found");
+                throw new NotFoundException("User not found");
             var products = _productRepo.GetQueryable(p => p.UserId.ToString() == id);
+            if (products == null)
+                throw new NotFoundException("Products not found");
+
             return products.Select(p => new ProductView
             {
                 Id = p.Id,
@@ -122,13 +147,14 @@ namespace InventoryMg.BLL.Implementation
                 BrandName = p.BrandName,
                 UserId = p.UserId
             }); ;
-           
+
         }
 
         public async Task<ProductView> GetProductById(Guid prodId)
         {
 
             Product product = await _productRepo.GetByIdAsync(prodId);
+            if (product == null) throw new NotFoundException("Invalid Id");
             return new ProductView
             {
                 Id = product.Id,
@@ -141,5 +167,7 @@ namespace InventoryMg.BLL.Implementation
                 BrandName = product.BrandName
             };
         }
+
+
     }
 }
