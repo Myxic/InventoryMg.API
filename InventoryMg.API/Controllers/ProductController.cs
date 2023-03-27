@@ -56,7 +56,7 @@ namespace InventoryMg.API.Controllers
             return BadRequest();
         }
 
-        [HttpPost]
+        [HttpPut]
         [Route("update-product-by-id")]
         public async Task<IActionResult> UpdateProduct([FromBody] ProductView product)
         {
@@ -68,7 +68,7 @@ namespace InventoryMg.API.Controllers
             return Ok(result);
         }
 
-        [HttpGet]
+        [HttpDelete]
         [Route("delete-product-by-id")]
         public async Task<IActionResult> DeleteProduct(string id)
         {

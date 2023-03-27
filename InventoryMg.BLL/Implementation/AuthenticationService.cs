@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using InventoryMg.BLL.Exceptions;
 
 namespace InventoryMg.BLL.Implementation
 {
@@ -33,14 +34,7 @@ namespace InventoryMg.BLL.Implementation
 
             var existingUser = await _userManager.FindByEmailAsync(request.Email);
             if (existingUser != null)
-                return new AuthResult()
-                {
-                    Result = false,
-                    Errors = new List<string>()
-                    {
-                        $"User already exists with Email {request.Email}"
-                    }
-                };
+                throw new Exceptions.NotImplementedException($"User already exists with Email {request.Email}");
 
             UserProfile user = new()
             {
@@ -54,16 +48,8 @@ namespace InventoryMg.BLL.Implementation
             IdentityResult result = await _userManager.CreateAsync(user, request.Password);
 
             if (!result.Succeeded)
-            {
-                return new AuthResult()
-                {
-                    Result = false,
-                    Errors = new List<string>()
-                    {
-                       $"Failed to create user: {(result.Errors.FirstOrDefault())?.Description}"
-                    }
-                };
-                // throw new InvalidOperationException($"Failed to create user: {(result.Errors.FirstOrDefault())?.Description}");
+            {  
+              throw new InvalidOperationException($"Failed to create user: {(result.Errors.FirstOrDefault())?.Description}");
             };
             //generate token
            await _roleManager.CreateAsync(new AppRole { Name = "Customer", Id= Guid.NewGuid().ToString()});
@@ -85,19 +71,12 @@ namespace InventoryMg.BLL.Implementation
         {
             var existingUser = await _userManager.FindByEmailAsync(request.Email);
             if (existingUser == null)
-                return new AuthenticationResponse()
-                {
-                    FullName = null,
-                    JwtToken = null
-                };
+                throw new NotFoundException($"Invalid email/password");
+
             var isCorrect = await _userManager.CheckPasswordAsync(existingUser,request.Password);
             if (!isCorrect)
             {
-                return new AuthenticationResponse()
-                {
-                    FullName = null,
-                    JwtToken = null
-                };
+                throw new NotFoundException($"Invalid email/password");
             }
 
             var jwtToken = GenerateJwtToken(existingUser);
