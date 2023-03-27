@@ -1,4 +1,5 @@
-﻿using InventoryMg.BLL.DTOs.Request;
+﻿using AutoMapper;
+using InventoryMg.BLL.DTOs.Request;
 using InventoryMg.BLL.DTOs.Response;
 using InventoryMg.BLL.Exceptions;
 using InventoryMg.BLL.Interfaces;
@@ -15,12 +16,14 @@ namespace InventoryMg.BLL.Implementation
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRepository<Product> _productRepo;
         private readonly UserManager<UserProfile> _userManager;
+        private readonly IMapper _mapper;
 
-        public ProductService(IUnitOfWork unitOfWork, UserManager<UserProfile> userManager)
+        public ProductService(IUnitOfWork unitOfWork, UserManager<UserProfile> userManager, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _productRepo = _unitOfWork.GetRepository<Product>();
             _userManager = userManager;
+            _mapper = mapper;
         }
 
         public async Task<ProductResult> AddProductAsync(ProductViewRequest product)
@@ -29,36 +32,17 @@ namespace InventoryMg.BLL.Implementation
 
             if (userExist == null)
                 throw new KeyNotFoundException($"User Id: {product.UserId} does not match with the product");
-
-            var newProd = new Product
-            {
-                UserId = product.UserId,
-                Name = product.Name,
-                Description = product.Description,
-                Category = product.Category,
-                Quantity = product.Quantity,
-                Price = product.Price,
-                BrandName = product.BrandName
-            };
-
+            var newProd = _mapper.Map<Product>(product);
             var createdProduct = await _productRepo.AddAsync(newProd);
 
             if (createdProduct != null)
             {
+                var toReturn = _mapper.Map<ProductView>(createdProduct);
                 return (new ProductResult()
                 {
                     Products = new List<ProductView>()
                         {
-                            new ProductView
-                            {
-                                Name = createdProduct.Name,
-                                Description = createdProduct.Description ?? "No Description Yet",
-                                Category = createdProduct.Category,
-                                Price = createdProduct.Price,
-                                BrandName = createdProduct.BrandName,
-                                UserId = createdProduct.UserId,
-                                Id =  createdProduct.Id
-                            }
+                          toReturn
                         },
                     Result = true,
                     Message = new List<string>() {
@@ -135,37 +119,17 @@ namespace InventoryMg.BLL.Implementation
             var products = _productRepo.GetQueryable(p => p.UserId.ToString() == id);
             if (products == null)
                 throw new NotFoundException("Products not found");
-
-            return products.Select(p => new ProductView
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Price = p.Price,
-                Description = p.Description ?? "No Descriptions yet",
-                Quantity = p.Quantity,
-                Category = p.Category,
-                BrandName = p.BrandName,
-                UserId = p.UserId
-            }); ;
+            var toReturn = _mapper.Map<IEnumerable<ProductView>>(products);
+            return toReturn;
 
         }
 
         public async Task<ProductView> GetProductById(Guid prodId)
         {
-
             Product product = await _productRepo.GetByIdAsync(prodId);
             if (product == null) throw new NotFoundException("Invalid Id");
-            return new ProductView
-            {
-                Id = product.Id,
-                UserId = product.UserId,
-                Name = product.Name,
-                Description = product.Description,
-                Category = product.Category,
-                Quantity = product.Quantity,
-                Price = product.Price,
-                BrandName = product.BrandName
-            };
+            var toReturn = _mapper.Map<ProductView>(product);
+            return toReturn;
         }
 
 

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Reflection;
 
 namespace InventoryMg.API
 {
@@ -63,6 +64,7 @@ namespace InventoryMg.API
 
             builder.Services.RegisterServices();
 
+            builder.Services.AddAutoMapper(Assembly.Load("InventoryMg.BLL"));
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

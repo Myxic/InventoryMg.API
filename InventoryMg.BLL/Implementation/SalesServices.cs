@@ -1,12 +1,11 @@
-﻿using InventoryMg.BLL.DTOs.Request;
+﻿using AutoMapper;
+using InventoryMg.BLL.DTOs.Request;
 using InventoryMg.BLL.DTOs.Response;
 using InventoryMg.BLL.Exceptions;
 using InventoryMg.BLL.Interfaces;
 using InventoryMg.DAL.Entities;
-using InventoryMg.DAL.Enums;
 using InventoryMg.DAL.Repository;
 using Microsoft.AspNetCore.Identity;
-using System.Xml.Linq;
 using NotImplementedException = InventoryMg.BLL.Exceptions.NotImplementedException;
 
 namespace InventoryMg.BLL.Implementation
@@ -16,13 +15,15 @@ namespace InventoryMg.BLL.Implementation
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRepository<Sale> _saleRepo;
         private readonly UserManager<UserProfile> _userManager;
+        private readonly IMapper _mapper;
         private readonly IRepository<Product> _productRepo;
 
-        public SalesServices(IUnitOfWork unitOfWork, UserManager<UserProfile> userManager)
+        public SalesServices(IUnitOfWork unitOfWork, UserManager<UserProfile> userManager, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _saleRepo = unitOfWork.GetRepository<Sale>();
             _userManager = userManager;
+            _mapper = mapper;
             _productRepo = unitOfWork.GetRepository<Product>();
         }
         public async Task<SalesResponseDto> AddSale(SalesRequestDto model)
@@ -38,16 +39,8 @@ namespace InventoryMg.BLL.Implementation
                 throw new BadRequestException("Product quantity is less than sale quantity");
 
             var newQuntity = existingProduct.Quantity - model.Quantity;
+            var newSale = _mapper.Map<Sale>(model);
 
-            var newSale = new Sale()
-            {
-                Name = model.Name,
-                Price = model.Price,
-                Category = model.Category,
-                Quantity = model.Quantity,
-                UserId = new Guid(model.UserId),
-                ProductId = new Guid(model.ProductId)
-            };
             Sale addedSale = await _saleRepo.AddAsync(newSale);
             if (addedSale == null)
                 throw new NotImplementedException("Sale was unable to be added");
@@ -55,16 +48,7 @@ namespace InventoryMg.BLL.Implementation
             existingProduct.Quantity = newQuntity;
 
             await _productRepo.UpdateAsync(existingProduct);
-            return new SalesResponseDto()
-            {
-                Id = addedSale.Id,
-                Name = addedSale.Name,
-                Price = addedSale.Price,
-                Category = addedSale.Category,
-                Quantity = addedSale.Quantity,
-                UserId = addedSale.UserId,
-                ProductId = addedSale.ProductId,
-            };
+            return _mapper.Map<SalesResponseDto>(addedSale);
         }
 
         public async Task<bool> DeleteSale(Guid userId, Guid saleId)
@@ -109,16 +93,7 @@ namespace InventoryMg.BLL.Implementation
             if (sale == null)
                 throw new NotFoundException("Sale id not found");
 
-            return new SalesResponseDto
-            {
-                Id = sale.Id,
-                ProductId = sale.ProductId,
-                UserId = sale.UserId,
-                Name = sale.Name,
-                Category = sale.Category,
-                Price = sale.Price,
-                Quantity = sale.Quantity
-            };
+            return _mapper.Map<SalesResponseDto>(sale);
         }
 
         public IEnumerable<SalesResponseDto> GetUserSales(Guid UserId)
@@ -127,16 +102,7 @@ namespace InventoryMg.BLL.Implementation
             var sales = _saleRepo.GetQueryable(p => p.UserId == UserId).OrderBy(i => i.Id);
             if (sales == null)
                 throw new NotFoundException("User id was incorrect");
-            return sales.Select(s => new SalesResponseDto
-            {
-                Id = s.Id,
-                ProductId = s.ProductId,
-                UserId = s.UserId,
-                Name = s.Name,
-                Category = s.Category,
-                Price = s.Price,
-                Quantity = s.Quantity
-            });
+            return _mapper.Map<IEnumerable<SalesResponseDto>>(sales);
         }
 
 

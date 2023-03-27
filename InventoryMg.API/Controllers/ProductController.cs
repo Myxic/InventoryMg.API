@@ -2,7 +2,6 @@
 using InventoryMg.BLL.DTOs.Response;
 using InventoryMg.BLL.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Server.IIS.Core;
 
 namespace InventoryMg.API.Controllers
 {

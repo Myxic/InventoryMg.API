@@ -18,7 +18,7 @@ namespace InventoryMg.API.Controllers
 
         [HttpPost]
         [Route("add-sale")]
-        public async Task<IActionResult> AddSale(SalesRequestDto model)
+        public async Task<IActionResult> AddSale([FromBody] SalesRequestDto model)
         {
             if (!ModelState.IsValid)
             {
@@ -70,7 +70,7 @@ namespace InventoryMg.API.Controllers
 
         [HttpPut]
         [Route("edit-sale-by-id")]
-        public async Task<IActionResult> UpdateSale(SalesResponseDto model)
+        public async Task<IActionResult> UpdateSale([FromBody] SalesResponseDto model)
         {
             if (!ModelState.IsValid)
             {

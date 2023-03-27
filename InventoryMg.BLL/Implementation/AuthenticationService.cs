@@ -1,16 +1,16 @@
-﻿using InventoryMg.DAL.Entities;
+﻿using AutoMapper;
 using InventoryMg.BLL.DTOs;
 using InventoryMg.BLL.DTOs.Request;
 using InventoryMg.BLL.DTOs.Response;
+using InventoryMg.BLL.Exceptions;
 using InventoryMg.BLL.Interfaces;
-using InventoryMg.DAL.Configurations;
+using InventoryMg.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using InventoryMg.BLL.Exceptions;
 
 namespace InventoryMg.BLL.Implementation
 {
@@ -20,13 +20,17 @@ namespace InventoryMg.BLL.Implementation
         // private readonly JwtConfig _jwtConfig;
         private readonly IConfiguration _configuration;
         private readonly RoleManager<AppRole> _roleManager;
+        private readonly IMapper _mapper;
 
-        public AuthenticationService(UserManager<UserProfile> userManager, IConfiguration configuration, RoleManager<AppRole> roleManager)
+        public AuthenticationService(UserManager<UserProfile> userManager,
+            IConfiguration configuration, RoleManager<AppRole> roleManager,
+            IMapper mapper)
         {
             _userManager = userManager;
             //   _jwtConfig = jwtConfig;
             _configuration = configuration;
             _roleManager = roleManager;
+            _mapper = mapper;
         }
 
         public async Task<AuthResult> CreateUser(UserRegistration request)
@@ -35,26 +39,18 @@ namespace InventoryMg.BLL.Implementation
             var existingUser = await _userManager.FindByEmailAsync(request.Email);
             if (existingUser != null)
                 throw new Exceptions.NotImplementedException($"User already exists with Email {request.Email}");
+            UserProfile user = _mapper.Map<UserProfile>(request);
 
-            UserProfile user = new()
-            {
-                FullName = request.FirstName + " " + request.LastName,
-                Phone = request.Phone,
-                Email = request.Email,
-                UserName = request.UserName,
-                Password = request.Password,
-
-            };
             IdentityResult result = await _userManager.CreateAsync(user, request.Password);
 
             if (!result.Succeeded)
-            {  
-              throw new InvalidOperationException($"Failed to create user: {(result.Errors.FirstOrDefault())?.Description}");
+            {
+                throw new InvalidOperationException($"Failed to create user: {(result.Errors.FirstOrDefault())?.Description}");
             };
             //generate token
-           await _roleManager.CreateAsync(new AppRole { Name = "Customer", Id= Guid.NewGuid().ToString()});
+            await _roleManager.CreateAsync(new AppRole { Name = "Customer", Id = Guid.NewGuid().ToString() });
             var getRole = _roleManager.Roles.Where(r => r.Name == "Customer").FirstOrDefault();
-          await  _userManager.AddToRoleAsync(user,getRole.Name);
+            await _userManager.AddToRoleAsync(user, getRole.Name);
 
             var token = GenerateJwtToken(user);
 
@@ -73,7 +69,7 @@ namespace InventoryMg.BLL.Implementation
             if (existingUser == null)
                 throw new NotFoundException($"Invalid email/password");
 
-            var isCorrect = await _userManager.CheckPasswordAsync(existingUser,request.Password);
+            var isCorrect = await _userManager.CheckPasswordAsync(existingUser, request.Password);
             if (!isCorrect)
             {
                 throw new NotFoundException($"Invalid email/password");
@@ -85,7 +81,7 @@ namespace InventoryMg.BLL.Implementation
                 JwtToken = jwtToken,
                 FullName = existingUser.FullName
             };
-            
+
         }
 
         private string GenerateJwtToken(UserProfile user)
