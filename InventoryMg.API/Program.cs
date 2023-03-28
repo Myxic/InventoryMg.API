@@ -34,6 +34,19 @@ namespace InventoryMg.API
            
 
             builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
+            var key = Encoding.ASCII.GetBytes(builder.Configuration.GetSection("JwtConfig:Secret").Value);
+
+            var tokenValidationParameters = new TokenValidationParameters()
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = false, //for development, true when u get to prod
+                ValidateAudience = false, //for development, true when u get to prod
+                RequireExpirationTime = false,//for development,  when u get to prod implement refresh token 
+                ValidateLifetime = true
+            };
+
+
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -44,19 +57,11 @@ namespace InventoryMg.API
 
                .AddJwtBearer(jwt =>
                {
-                   var key = Encoding.ASCII.GetBytes(builder.Configuration.GetSection("JwtConfig:Secret").Value);
-
                    jwt.SaveToken = true;
-                   jwt.TokenValidationParameters = new TokenValidationParameters()
-                   {
-                       ValidateIssuerSigningKey = true,
-                       IssuerSigningKey = new SymmetricSecurityKey(key),
-                       ValidateIssuer = false, //for development, true when u get to prod
-                       ValidateAudience = false, //for development, true when u get to prod
-                       RequireExpirationTime = false,//for development,  when u get to prod implement refresh token 
-                       ValidateLifetime = true
-                   };
+                   jwt.TokenValidationParameters = tokenValidationParameters;
                });
+
+            builder.Services.AddSingleton(tokenValidationParameters);
 
             builder.Services.AddIdentity<UserProfile, AppRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

@@ -21,16 +21,20 @@ namespace InventoryMg.BLL.Implementation
         private readonly IConfiguration _configuration;
         private readonly RoleManager<AppRole> _roleManager;
         private readonly IMapper _mapper;
+        private readonly ApplicationDbContext _dbContext;
+        private readonly TokenValidationParameters _tokenValidationParameters;
 
         public AuthenticationService(UserManager<UserProfile> userManager,
             IConfiguration configuration, RoleManager<AppRole> roleManager,
-            IMapper mapper)
+            IMapper mapper, ApplicationDbContext dbContext, TokenValidationParameters tokenValidationParameters)
         {
             _userManager = userManager;
             //   _jwtConfig = jwtConfig;
             _configuration = configuration;
             _roleManager = roleManager;
             _mapper = mapper;
+            _dbContext = dbContext;
+            _tokenValidationParameters = tokenValidationParameters;
         }
 
         public async Task<AuthResult> CreateUser(UserRegistration request)
@@ -52,15 +56,10 @@ namespace InventoryMg.BLL.Implementation
             var getRole = _roleManager.Roles.Where(r => r.Name == "Customer").FirstOrDefault();
             await _userManager.AddToRoleAsync(user, getRole.Name);
 
-            var token = GenerateJwtToken(user);
+            var token = await GenerateJwtToken(user);
 
 
-            return new AuthResult()
-            {
-                Result = true,
-                Token = token,
-                Errors = null
-            };
+            return token;
         }
 
         public async Task<AuthenticationResponse> UserLogin(LoginRequest request)
@@ -75,16 +74,17 @@ namespace InventoryMg.BLL.Implementation
                 throw new NotFoundException($"Invalid email/password");
             }
 
-            var jwtToken = GenerateJwtToken(existingUser);
+            var jwtToken = await GenerateJwtToken(existingUser);
             return new AuthenticationResponse()
             {
-                JwtToken = jwtToken,
+                JwtToken = jwtToken.Token,
+                RefreshToken = jwtToken.RefreshToken,
                 FullName = existingUser.FullName
             };
 
         }
 
-        private string GenerateJwtToken(UserProfile user)
+        private async Task<AuthResult> GenerateJwtToken(UserProfile user)
         {
             var JwtTokenHandler = new JwtSecurityTokenHandler();
 
@@ -100,13 +100,46 @@ namespace InventoryMg.BLL.Implementation
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                         new Claim(JwtRegisteredClaimNames.Iat, DateTime.Now.ToUniversalTime().ToString()),
                 }),
-                Expires = DateTime.Now.AddHours(1),
+                Expires = DateTime.UtcNow.Add(TimeSpan.Parse(_configuration.GetSection("JwtConfig:ExpiryTimeFrame").Value)),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
             };
 
             var token = JwtTokenHandler.CreateToken(tokenDescriptor);
             var jwtToken = JwtTokenHandler.WriteToken(token);
-            return jwtToken;
+
+
+            //refresh token
+
+            var refreshToken = new RefreshToken()
+            {
+                JwtId = token.Id,
+                Token = RandomStringGenrator(23),//generate a refresh token
+                CreatedAt = DateTime.UtcNow,
+                ExpiryDate = DateTime.UtcNow.AddMonths(6),
+                IsRevoked = false,
+                IsUsed = false,
+                UserId = user.Id,
+
+            };
+            await _dbContext.RefreshTokens.AddAsync(refreshToken);
+            await _dbContext.SaveChangesAsync();
+
+
+            return new AuthResult()
+            {
+                Result = true,
+                Token = jwtToken,
+                RefreshToken = refreshToken.Token,
+                Errors = null
+            };
+        }
+
+        private string RandomStringGenrator(int length)
+        {
+            var random = new Random();
+            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz_";
+            return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+
         }
 
     }
