@@ -14,5 +14,7 @@ namespace InventoryMg.BLL.Interfaces
         Task<AuthResult> CreateUser(UserRegistration request);
         Task<AuthenticationResponse> UserLogin(LoginRequest request);
 
+        Task<AuthResult> GetNewJwtRefreshToken(TokenRequest tokenRequest);
+
     }
 }

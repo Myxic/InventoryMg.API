@@ -27,7 +27,7 @@ namespace InventoryMg.API.Controllers
 
                 if (response.Result)
                 {
-                  //  return CreatedAtAction("Register",response);
+                    //  return CreatedAtAction("Register",response);
                     return Ok(response);
                 }
 
@@ -45,7 +45,7 @@ namespace InventoryMg.API.Controllers
 
         [HttpPost]
         [Route("Login")]
-            public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
+        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
             if (ModelState.IsValid)
             {
@@ -67,11 +67,43 @@ namespace InventoryMg.API.Controllers
                 });
 
             }
-            return BadRequest(new AuthResult() { 
-                    Errors = new List<string>()
+            return BadRequest(new AuthResult()
+            {
+                Errors = new List<string>()
                     {
                     "Invalid payload"
                     }
+            });
+        }
+
+        [HttpPost]
+        [Route("RefreshToken")]
+        public async Task<IActionResult> RefreshToken([FromBody] TokenRequest tokenRequest)
+        {
+            if (ModelState.IsValid)
+            {
+                var result = await _authenticationService.GetNewJwtRefreshToken(tokenRequest);
+                if (result.Result == false)
+                {
+                    return BadRequest(new AuthResult()
+                    {
+                        Errors = new List<string>()
+                {
+                    "Invalid Tokens"
+                },
+                        Result = false
+                    });
+                }
+
+                return Ok(result);
+            }
+            return BadRequest(new AuthResult()
+            {
+                Errors = new List<string>()
+                {
+                    "Invalid parameters"
+                },
+                Result = false
             });
         }
 
