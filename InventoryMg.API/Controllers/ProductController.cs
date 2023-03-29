@@ -1,13 +1,16 @@
 ﻿using InventoryMg.BLL.DTOs.Request;
 using InventoryMg.BLL.DTOs.Response;
 using InventoryMg.BLL.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryMg.API.Controllers
 {
-    // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    
     [Route("api/[controller]")]
     [ApiController]
+   // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ProductController : ControllerBase
     {
         private readonly IProductService _productService;
@@ -31,14 +34,16 @@ namespace InventoryMg.API.Controllers
 
         [HttpPost]
         [Route("add-product")]
+        //[Authorize(Roles = "Customer", Policy = "Department")]
         public async Task<IActionResult> Addproduct([FromBody] ProductViewRequest product)
         {
             ProductResult result = await _productService.AddProductAsync(product);
             if (result.Result == false)
             {
-                return BadRequest();
+                return BadRequest(result);
             }
-            return Ok(result);
+            // return Ok(result);
+            return StatusCode(201, result);
         }
 
         [HttpGet]
@@ -52,7 +57,7 @@ namespace InventoryMg.API.Controllers
             {
                 return Ok(response);
             }
-            return BadRequest();
+            return BadRequest(response);
         }
 
         [HttpPut]
@@ -62,7 +67,7 @@ namespace InventoryMg.API.Controllers
             ProductResult result = await _productService.EditProductAsync(product);
             if (result.Result == false)
             {
-                return BadRequest();
+                return BadRequest(result);
             }
             return Ok(result);
         }
@@ -75,9 +80,9 @@ namespace InventoryMg.API.Controllers
             ProductResult result = await _productService.DeleteProductAsync(prodId);
             if (result.Result)
             {
-                return Ok(result);
+                return NoContent();
             }
-            return BadRequest();
+            return BadRequest(result);
         }
     }
 }

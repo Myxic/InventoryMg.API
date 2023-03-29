@@ -35,7 +35,7 @@ namespace InventoryMg.API.Controllers
 
 
 
-            return Ok(obj);
+            return StatusCode(201,obj);
         }
 
         [HttpGet]

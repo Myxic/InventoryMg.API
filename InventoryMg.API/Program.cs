@@ -1,13 +1,13 @@
-using InventoryMg.DAL.Entities;
 using InventoryMg.BLL.Extensions;
 using InventoryMg.DAL.Configurations;
+using InventoryMg.DAL.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Reflection;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
+using System.Text;
 
 namespace InventoryMg.API
 {
@@ -30,7 +30,24 @@ namespace InventoryMg.API
                         Title = "InventoryMg.API",
                         Version = "v1"
                     });
+                    c.AddSecurityDefinition("BearerAuth", new OpenApiSecurityScheme
+                    {
+                        Type = SecuritySchemeType.Http,
+                        Scheme = JwtBearerDefaults.AuthenticationScheme.ToLowerInvariant(),
+                        In = ParameterLocation.Header,
+                        Name = "Authorization",
+                        BearerFormat = "JWT",
+                        Description = "JWT Authorization header using the Bearer scheme."
+                    });
+                       // c.OperationFilter<AuthResponsesOperationFiler>();
+                   
+
                 });
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("Open", builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+            });
 
             builder.Services.AddDbContext<ApplicationDbContext>(opts =>
             {
@@ -40,7 +57,7 @@ namespace InventoryMg.API
                 );
 
             });
-           
+
 
             builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
             var key = Encoding.ASCII.GetBytes(builder.Configuration.GetSection("JwtConfig:Secret").Value);

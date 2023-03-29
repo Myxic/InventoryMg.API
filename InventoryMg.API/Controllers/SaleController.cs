@@ -27,7 +27,7 @@ namespace InventoryMg.API.Controllers
             var response = await _salesServices.AddSale(model);
             if (response != null)
             {
-                return Ok(response);
+                return StatusCode(201,response);
             }
 
             return BadRequest("something went wrong");
@@ -51,7 +51,7 @@ namespace InventoryMg.API.Controllers
             {
                 return Ok("Sale deleted");
             }
-            return BadRequest();
+            return BadRequest(new {message ="Unable to delete", status = result});
         }
 
         [HttpGet]
@@ -65,7 +65,7 @@ namespace InventoryMg.API.Controllers
             {
                 return Ok(response);
             }
-            return BadRequest();
+            return BadRequest(response);
         }
 
         [HttpPut]
@@ -74,12 +74,12 @@ namespace InventoryMg.API.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest();
+                return BadRequest(ModelState);
             }
 
             SalesResponseDto edited = await _salesServices.EditSale(model);
             if (edited == null)
-                return BadRequest();
+                return BadRequest(edited);
 
             return Ok(edited);
         }

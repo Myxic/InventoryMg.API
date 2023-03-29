@@ -53,9 +53,9 @@ namespace InventoryMg.BLL.Implementation
                 throw new InvalidOperationException($"Failed to create user: {(result.Errors.FirstOrDefault())?.Description}");
             };
             //generate token
-            await _roleManager.CreateAsync(new AppRole { Name = "Customer", Id = Guid.NewGuid().ToString() });
-            var getRole = _roleManager.Roles.Where(r => r.Name == "Customer").FirstOrDefault();
-            await _userManager.AddToRoleAsync(user, getRole.Name);
+            /*await _roleManager.CreateAsync(new AppRole { Name = "Customer", Id = Guid.NewGuid().ToString() });
+            var getRole = _roleManager.Roles.Where(r => r.Name == "Customer").FirstOrDefault();*/
+            await _userManager.AddToRoleAsync(user, "Customer");
 
             var token = await GenerateJwtToken(user);
 
