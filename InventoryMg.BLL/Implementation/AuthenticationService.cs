@@ -63,14 +63,7 @@ namespace InventoryMg.BLL.Implementation
             return token;
         }
 
-        public async Task<AuthResult> GetNewJwtRefreshToken(TokenRequest tokenRequest)
-        {
-            var result = await VerifyAndGenerateToken(tokenRequest);
-            if (result.Result == false)
-                throw new Exceptions.NotImplementedException("Invalid Tokens");
 
-            return result;
-        }
 
         public async Task<AuthenticationResponse> UserLogin(LoginRequest request)
         {
@@ -94,22 +87,27 @@ namespace InventoryMg.BLL.Implementation
 
         }
 
+
+        public async Task<AuthResult> GetNewJwtRefreshToken(TokenRequest tokenRequest)
+        {
+            var result = await VerifyAndGenerateToken(tokenRequest);
+            if (result.Result == false)
+                throw new Exceptions.NotImplementedException("Invalid Tokens");
+
+            return result;
+        }
         private async Task<AuthResult> GenerateJwtToken(UserProfile user)
         {
             var JwtTokenHandler = new JwtSecurityTokenHandler();
 
             var key = Encoding.UTF8.GetBytes(_configuration.GetSection("JwtConfig:Secret").Value);
+
+            var claims = await GetAllValidClaims(user);
+
             //Token descriptor
             var tokenDescriptor = new SecurityTokenDescriptor()
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                        new Claim("Id", user.Id),
-                        new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                        new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                        new Claim(JwtRegisteredClaimNames.Iat, DateTime.Now.ToUniversalTime().ToString()),
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.Add(TimeSpan.Parse(_configuration.GetSection("JwtConfig:ExpiryTimeFrame").Value)),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
             };
@@ -144,6 +142,45 @@ namespace InventoryMg.BLL.Implementation
             };
         }
 
+        private async Task<IList<Claim>> GetAllValidClaims(UserProfile user)
+        {
+            var _options = new IdentityOptions();
+            var claims = new List<Claim>()
+            {
+                 new Claim("Id", user.Id),
+                  new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim(JwtRegisteredClaimNames.Iat, DateTime.Now.ToUniversalTime().ToString())
+            };
+            //getting claims that we have assigned to the user
+            var userClaims = await _userManager.GetClaimsAsync(user);
+            claims.AddRange(userClaims);
+
+            //get the user role and add to the claims
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            //convert roles to claims
+            foreach (var userRole in userRoles)
+            {
+               
+                var role = await _roleManager.FindByNameAsync(userRole);
+                if (role != null)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, userRole));
+
+                    var roleClaims = await _roleManager.GetClaimsAsync(role);
+                    foreach (var roleClaim in roleClaims)
+                    {
+                        claims.Add(roleClaim);
+                    }
+                }
+
+                
+            }
+            return claims;
+
+        }
         private string RandomStringGenrator(int length)
         {
             var random = new Random();

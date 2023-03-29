@@ -38,7 +38,6 @@ namespace InventoryMg.API.Controllers
             return Ok(obj);
         }
 
-
         [HttpGet]
         [Route("get-all-users")]
         public async Task<IActionResult> GetAllUsers()
@@ -58,5 +57,32 @@ namespace InventoryMg.API.Controllers
             }
             return BadRequest(result);
         }
+
+
+        [HttpGet]
+        [Route("get-user-roles")]
+        public async Task<IActionResult> GetUserRoles(string email)
+        {
+            var result = await _roleService.GetUserRoles(email);
+            if (result == null)
+            {
+                return BadRequest();
+            }
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("remove-user-from-role")]
+        public async Task<IActionResult> RemoveUserFromRole(string email, string roleName)
+        {
+            var result = await _roleService.RemoveUserFromRole(email, roleName);
+            if (result.result)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+
     }
 }

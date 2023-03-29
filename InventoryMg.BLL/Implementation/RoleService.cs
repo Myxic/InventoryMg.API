@@ -89,5 +89,45 @@ namespace InventoryMg.BLL.Implementation
             return users;
 
         }
+
+        public async Task<IList<string>> GetUserRoles(string email)
+        {
+            //check if email is valid
+            var user = await _userManger.FindByEmailAsync(email);
+            if(user == null)
+            {
+                throw new NotFoundException($"User with email:{email} does not exist");
+            }
+
+            var roles = await _userManger.GetRolesAsync(user);
+            //return roles
+           return roles;
+        }
+
+        public async Task<RoleResult> RemoveUserFromRole(string email, string roleName)
+        {
+            //check user exist
+            var user = await _userManger.FindByEmailAsync(email);
+            if (user == null)
+            {
+                throw new NotFoundException($"User with email:{email} does not exist");
+            }
+
+            //role exist
+            var roleExist = await _roleManager.RoleExistsAsync(roleName);
+            if(!roleExist)
+            throw new NotFoundException($"Role: {roleName} does not exist");
+
+            var result = await _userManger.RemoveFromRoleAsync(user,roleName);
+            if (result.Succeeded)
+            {
+                return new RoleResult()
+                {
+                    result = true,
+                    message = $"User {email} has been removed from role: {roleName}"
+                };
+            }
+            throw new Exceptions.NotImplementedException($"Unable to remove user: {email} from role: {roleName}");
+        }
     }
 }

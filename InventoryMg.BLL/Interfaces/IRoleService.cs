@@ -17,5 +17,8 @@ namespace InventoryMg.BLL.Interfaces
         Task<IEnumerable<UserProfile>> GetAllUser();
 
         Task<RoleResult> AddUserToRole(string email, string roleName);
+        Task<IList<string>> GetUserRoles(string email);
+
+        Task<RoleResult> RemoveUserFromRole(string email, string roleName);
     }
 }
