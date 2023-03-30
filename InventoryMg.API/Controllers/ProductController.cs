@@ -7,10 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryMg.API.Controllers
 {
-    
+
     [Route("api/[controller]")]
     [ApiController]
-   // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Customer")]
     public class ProductController : ControllerBase
     {
         private readonly IProductService _productService;
@@ -83,6 +83,19 @@ namespace InventoryMg.API.Controllers
                 return NoContent();
             }
             return BadRequest(result);
+        }
+
+        [HttpPost]
+        [Route("upload-product-image")]
+        public async Task<IActionResult> Upload(IFormFile file, string prodId)
+        {
+
+            var result = await _productService.UploadProductImage(prodId, file);
+            if (result == null)
+            {
+                return BadRequest("Unable to upload ");
+            }
+            return Ok(result);
         }
     }
 }

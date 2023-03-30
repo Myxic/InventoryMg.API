@@ -5,6 +5,7 @@ using InventoryMg.BLL.Exceptions;
 using InventoryMg.BLL.Interfaces;
 using InventoryMg.DAL.Entities;
 using InventoryMg.DAL.Repository;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using KeyNotFoundException = InventoryMg.BLL.Exceptions.KeyNotFoundException;
 using NotImplementedException = InventoryMg.BLL.Exceptions.NotImplementedException;
@@ -132,6 +133,39 @@ namespace InventoryMg.BLL.Implementation
             return toReturn;
         }
 
+        public async Task<string> UploadProductImage(string prodId, IFormFile file)
+        {
+            var product = await _productRepo.GetSingleByAsync(p => p.Id.ToString() == prodId);
+            if (product == null)
+                throw new NotFoundException("Product with id {prodId} not found");
 
+            if (file == null || file.Length == 0)
+            {
+                throw new NotImplementedException("No file uploaded.");
+            }
+            string path = "";
+            if (file.Length > 0)
+            {
+                path = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "UploadedFiles"));
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+                using (var fileStream = new FileStream(Path.Combine(path, file.FileName), FileMode.Create))
+                {
+                    await file.CopyToAsync(fileStream);
+                }
+                product.ProductImagePath = path + $"/{file.FileName}";
+
+                var updatedProd = await _productRepo.UpdateAsync(product);
+                if (updatedProd == null)
+                {
+                    throw new NotImplementedException("Unable to upload image");
+                }
+                return $"File '{file.FileName}' was uploaded. Path: '{path}'";
+            }
+
+            throw new NotImplementedException("Invalid file size");
+        }
     }
 }

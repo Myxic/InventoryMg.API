@@ -1,5 +1,6 @@
 ﻿using InventoryMg.BLL.DTOs.Request;
 using InventoryMg.BLL.DTOs.Response;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,5 +18,7 @@ namespace InventoryMg.BLL.Interfaces
          Task<ProductResult> EditProductAsync(ProductView product);
 
         Task<ProductResult> DeleteProductAsync(Guid prodId);
+        
+        Task<string> UploadProductImage(string prodId,IFormFile file);
     }
 }

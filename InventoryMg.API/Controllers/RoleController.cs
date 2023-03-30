@@ -1,11 +1,15 @@
 ﻿using InventoryMg.BLL.DTOs.Response;
 using InventoryMg.BLL.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace InventoryMg.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "admin")]
     public class RoleController : ControllerBase
     {
         private readonly IRoleService _roleService;

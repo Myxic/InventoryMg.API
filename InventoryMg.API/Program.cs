@@ -2,6 +2,7 @@ using InventoryMg.BLL.Extensions;
 using InventoryMg.DAL.Configurations;
 using InventoryMg.DAL.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -22,27 +23,42 @@ namespace InventoryMg.API
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(
-                c =>
-                {
-                    c.SwaggerDoc("v1", new OpenApiInfo
-                    {
-                        Title = "InventoryMg.API",
-                        Version = "v1"
-                    });
-                    c.AddSecurityDefinition("BearerAuth", new OpenApiSecurityScheme
-                    {
-                        Type = SecuritySchemeType.Http,
-                        Scheme = JwtBearerDefaults.AuthenticationScheme.ToLowerInvariant(),
-                        In = ParameterLocation.Header,
-                        Name = "Authorization",
-                        BearerFormat = "JWT",
-                        Description = "JWT Authorization header using the Bearer scheme."
-                    });
-                       // c.OperationFilter<AuthResponsesOperationFiler>();
-                   
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "InventoryManager", Version = "v1" });
 
+
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description =
+                        "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 1safsfsdfdfd\""
                 });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            },
+    });
+            });
+
+           builder.Services.Configure<FormOptions>(options =>
+            {
+                options.MultipartBodyLengthLimit = 104857600; // 100 MB
+            });
 
             builder.Services.AddCors(options =>
             {
@@ -88,6 +104,11 @@ namespace InventoryMg.API
                });
 
             builder.Services.AddSingleton(tokenValidationParameters);
+
+            builder.Services.Configure<FormOptions>(options =>
+              {
+                  options.MultipartBodyLengthLimit = 104857600; // 100 MB
+              });
 
             builder.Services.AddIdentity<UserProfile, AppRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

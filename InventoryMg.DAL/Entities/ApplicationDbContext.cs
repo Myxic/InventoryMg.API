@@ -18,6 +18,12 @@ namespace InventoryMg.DAL.Entities
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
+
+            builder.Entity<Product>()
+                .Property(p => p.ProductImagePath)
+                .IsRequired(false)
+                .HasMaxLength(500);
+
             base.OnModelCreating(builder);
         }
 

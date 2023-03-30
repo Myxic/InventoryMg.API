@@ -12,6 +12,8 @@ namespace InventoryMg.DAL.Entities
         public decimal Price { get; set; }
         public string BrandName { get; set; }
 
+        public string? ProductImagePath { get; set; }
+
         [ForeignKey("UserProfile")]
         public Guid UserId { get; set; }
         public UserProfile User { get; set; }
