@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using InventoryMg.BLL.DTOs.Request;
 using InventoryMg.BLL.DTOs.Response;
-using InventoryMg.BLL.Exceptions;
 using InventoryMg.BLL.Interfaces;
 using InventoryMg.DAL.Entities;
 using InventoryMg.DAL.Repository;
