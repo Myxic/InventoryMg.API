@@ -15,6 +15,8 @@ namespace InventoryMg.DAL.Entities
 
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
+        public DbSet<Transaction> Transactions { get; set; }    
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

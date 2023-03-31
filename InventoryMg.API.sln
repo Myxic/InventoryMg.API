@@ -5,9 +5,9 @@ VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InventoryMg.API", "InventoryMg.API\InventoryMg.API.csproj", "{B0223C32-67B7-4E6C-BB38-EA1F9D2DC22B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InventoryMg.BLL", "InventoryMg.BLL\InventoryMg.BLL.csproj", "{59711A06-FBF9-411C-AE13-D1775DEF75FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InventoryMg.BLL", "InventoryMg.BLL\InventoryMg.BLL.csproj", "{59711A06-FBF9-411C-AE13-D1775DEF75FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InventoryMg.DAL", "InventoryMg.DAL\InventoryMg.DAL.csproj", "{BDFD31AE-1A7B-4075-811E-13136110B1D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InventoryMg.DAL", "InventoryMg.DAL\InventoryMg.DAL.csproj", "{BDFD31AE-1A7B-4075-811E-13136110B1D3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

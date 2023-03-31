@@ -23,7 +23,8 @@ namespace InventoryMg.BLL.Extensions
            services.AddTransient<IUnitOfWork, UnitOfWork<ApplicationDbContext>>();
             services.AddTransient<IProductService, ProductService>();
             services.AddTransient<ISalesServices, SalesServices>();
-            services.AddTransient<IRoleService, RoleService>(); 
+            services.AddTransient<IRoleService, RoleService>();
+            services.AddTransient<IPaymentService,PaymentService>();
            
         }
     }
