@@ -33,7 +33,7 @@ namespace InventoryMg.BLL.Implementation
         }
         public async Task<TransactionInitializeResponse> InitalizePayment(PaymentRequest request)
         {
-         var user = await _userManager.FindByIdAsync(request.UserId);
+            var user = await _userManager.FindByIdAsync(request.UserId);
             if (user == null)
                 throw new NotFoundException($"User with id {request.UserId} not found");
 
@@ -55,7 +55,9 @@ namespace InventoryMg.BLL.Implementation
                     Amount = request.Amount,
                     TrxnRef = createRequest.Reference,
                     Email = request.Email,
-                    Status = false
+                    Status = false,
+                    UserId = new Guid(request.UserId)
+
                 };
                 await _transRepo.AddAsync(transaction);
                 return response;
@@ -70,13 +72,19 @@ namespace InventoryMg.BLL.Implementation
             if (response.Data.Status == "success")
             {
                 var transaction = await _transRepo.GetSingleByAsync(x => x.TrxnRef == reference);
+
                 if (transaction != null)
                 {
-                    transaction.Status = true;
+                    if (!transaction.Status)
+                    {
+                        transaction.Status = true;
 
-                    await _transRepo.UpdateAsync(transaction);
+                        await _transRepo.UpdateAsync(transaction);
 
-                    return response;
+                        return response;
+                    }
+
+                    throw new Exceptions.NotImplementedException("You have already verified this payment");
                 }
             }
             throw new Exceptions.NotImplementedException("Was not able to complete this request");
