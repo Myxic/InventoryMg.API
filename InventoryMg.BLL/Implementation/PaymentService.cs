@@ -43,7 +43,7 @@ namespace InventoryMg.BLL.Implementation
                 Email = request.Email,
                 Currency = "NGN",
                 Reference = Generate().ToString(),
-                CallbackUrl = "https://localhost:7242/api/Payment/verify"
+                CallbackUrl = "https://localhost:7242/api/Payment/verify-payment"
 
             };
             TransactionInitializeResponse response = PayStack.Transactions.Initialize(createRequest);
@@ -81,8 +81,6 @@ namespace InventoryMg.BLL.Implementation
             }
             throw new Exceptions.NotImplementedException("Was not able to complete this request");
         }
-
-
 
         public async Task<IEnumerable<Transaction>> GetPayments()
         {
