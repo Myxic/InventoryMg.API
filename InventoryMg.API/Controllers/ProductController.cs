@@ -4,13 +4,14 @@ using InventoryMg.BLL.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace InventoryMg.API.Controllers
 {
 
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Customer")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ProductController : ControllerBase
     {
         private readonly IProductService _productService;
@@ -20,11 +21,13 @@ namespace InventoryMg.API.Controllers
             _productService = productService;
         }
 
-        [HttpGet]
-        [Route("get-all-user-product")]
-        public async Task<IActionResult> GetProducts(string UserId)
+        [HttpGet("get-all-user-product")]
+        [SwaggerOperation(Summary = "Get all product list")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Return all products")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
+        public async Task<IActionResult> GetProducts()
         {
-            IEnumerable<ProductView> products = await _productService.GetAllUserProducts(UserId.ToString());
+            IEnumerable<ProductView> products = await _productService.GetAllUserProducts();
             if (products != null)
             {
                 return Ok(products);
@@ -32,9 +35,11 @@ namespace InventoryMg.API.Controllers
             return BadRequest();
         }
 
-        [HttpPost]
-        [Route("add-product")]
-        //[Authorize(Roles = "Customer", Policy = "Department")]
+        [HttpPost("add-product")]
+        [Authorize(Roles = "Customer")]
+        [SwaggerOperation(Summary = "Create a new product", Description = "Requires cusomer authorization")]
+        [SwaggerResponse(StatusCodes.Status201Created, "Return the newly crated product")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
         public async Task<IActionResult> Addproduct([FromBody] ProductViewRequest product)
         {
             ProductResult result = await _productService.AddProductAsync(product);
@@ -46,8 +51,12 @@ namespace InventoryMg.API.Controllers
             return StatusCode(201, result);
         }
 
-        [HttpGet]
-        [Route("get-product-by-id")]
+        [HttpGet("get-product-by-id")]
+        [Authorize(Roles = "Customer")]
+        [SwaggerOperation(Summary = "Get product by id", Description = "Requires cusomer authorization")]
+        [SwaggerResponse(StatusCodes.Status201Created, "Return the product")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Product not found")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
         public async Task<IActionResult> GetProductById(string id)
         {
 
@@ -60,8 +69,12 @@ namespace InventoryMg.API.Controllers
             return BadRequest(response);
         }
 
-        [HttpPut]
-        [Route("update-product-by-id")]
+        [HttpPut("update-product-by-id")]
+        [Authorize(Roles = "Customer")]
+        [SwaggerOperation(Summary = "Update product by id", Description = "Requires cusomer authorization")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Return the product")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Product not found")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
         public async Task<IActionResult> UpdateProduct([FromBody] ProductView product)
         {
             ProductResult result = await _productService.EditProductAsync(product);
@@ -72,8 +85,12 @@ namespace InventoryMg.API.Controllers
             return Ok(result);
         }
 
-        [HttpDelete]
-        [Route("delete-product-by-id")]
+        [HttpDelete("delete-product-by-id")]
+        [Authorize(Roles = "Customer")]
+        [SwaggerOperation(Summary = "Delete product by id", Description = "Requires cusomer authorization")]
+        [SwaggerResponse(StatusCodes.Status204NoContent, "Return no content")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Product not found")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
         public async Task<IActionResult> DeleteProduct(string id)
         {
             Guid prodId = new Guid(id);
@@ -85,11 +102,14 @@ namespace InventoryMg.API.Controllers
             return BadRequest(result);
         }
 
-        [HttpPost]
-        [Route("upload-product-image")]
+        [HttpPost("upload-product-image")]
+        [Authorize(Roles = "Customer")]
+        [SwaggerOperation(Summary = "Update productimage", Description = "Requires cusomer authorization")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Return Message")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Product not found")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
         public async Task<IActionResult> Upload(IFormFile file, string prodId)
         {
-
             var result = await _productService.UploadProductImage(prodId, file);
             if (result == null)
             {

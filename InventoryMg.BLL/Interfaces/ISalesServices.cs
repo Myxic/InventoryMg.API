@@ -6,7 +6,7 @@ namespace InventoryMg.BLL.Interfaces
     public interface ISalesServices
     {
 
-        IEnumerable<SalesResponseDto> GetUserSales(Guid UserId);
+        IEnumerable<SalesResponseDto> GetUserSales();
 
         Task<SalesResponseDto> AddSale(SalesRequestDto model);
 
@@ -14,6 +14,6 @@ namespace InventoryMg.BLL.Interfaces
 
         Task<SalesResponseDto> EditSale(SalesResponseDto model);
 
-        Task<bool> DeleteSale(Guid userId, Guid saleId);
+        Task<bool> DeleteSale(Guid saleId);
     }
 }

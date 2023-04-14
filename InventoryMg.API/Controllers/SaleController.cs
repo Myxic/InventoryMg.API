@@ -4,13 +4,14 @@ using InventoryMg.BLL.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 using System.Data;
 
 namespace InventoryMg.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Customer")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class SaleController : ControllerBase
     {
         private readonly ISalesServices _salesServices;
@@ -20,8 +21,11 @@ namespace InventoryMg.API.Controllers
             _salesServices = salesServices;
         }
 
-        [HttpPost]
-        [Route("add-sale")]
+        [HttpPost("add-sale")]
+        [Authorize(Roles = "Customer")]
+        [SwaggerOperation(Summary = "Create a new Sale", Description = "Requires cusomer authorization")]
+        [SwaggerResponse(StatusCodes.Status201Created, "Return the newly crated sale")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
         public async Task<IActionResult> AddSale([FromBody] SalesRequestDto model)
         {
             if (!ModelState.IsValid)
@@ -37,20 +41,27 @@ namespace InventoryMg.API.Controllers
             return BadRequest("something went wrong");
         }
 
-        [HttpGet]
-        [Route("get-all-user-sales")]
-        public IActionResult GetUserSales(string userId)
+        [HttpGet("get-all-user-sales")]
+        [Authorize(Roles = "Customer")]
+        [SwaggerOperation(Summary = "Get all user Sale", Description = "Requires cusomer authorization")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Return the newly crated Sale")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "No sale Avalible")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
+        public IActionResult GetUserSales()
         {
-            var id = new Guid(userId);
-            var sales = _salesServices.GetUserSales(id);
+           
+            var sales = _salesServices.GetUserSales();
             return Ok(sales);
         }
 
-        [HttpDelete]
-        [Route("delete-by-id")]
-        public async Task<IActionResult> Delete(string userId, string saleId)
+        [HttpDelete("delete-by-id")]
+        [Authorize(Roles = "Customer")]
+        [SwaggerOperation(Summary = "Delete Sale", Description = "Requires cusomer authorization")]
+        [SwaggerResponse(StatusCodes.Status204NoContent, "Return no content")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
+        public async Task<IActionResult> Delete(string saleId)
         {
-            var result = await _salesServices.DeleteSale(new Guid(userId), new Guid(saleId));
+            var result = await _salesServices.DeleteSale(new Guid(saleId));
             if (result)
             {
                 return Ok("Sale deleted");
@@ -58,8 +69,11 @@ namespace InventoryMg.API.Controllers
             return BadRequest(new {message ="Unable to delete", status = result});
         }
 
-        [HttpGet]
-        [Route("get-sale-by-id")]
+        [HttpGet("get-sale-by-id")]
+        [Authorize(Roles = "Customer")]
+        [SwaggerOperation(Summary = "Get Sale by Id", Description = "Requires cusomer authorization")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Return the sale")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
         public async Task<IActionResult> GetSaleById(string id)
         {
 
@@ -72,8 +86,11 @@ namespace InventoryMg.API.Controllers
             return BadRequest(response);
         }
 
-        [HttpPut]
-        [Route("edit-sale-by-id")]
+        [HttpPut("edit-sale-by-id")]
+        [Authorize(Roles = "Customer")]
+        [SwaggerOperation(Summary = "Update Sale by Id", Description = "Requires cusomer authorization")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Return the updated sale")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
         public async Task<IActionResult> UpdateSale([FromBody] SalesResponseDto model)
         {
             if (!ModelState.IsValid)

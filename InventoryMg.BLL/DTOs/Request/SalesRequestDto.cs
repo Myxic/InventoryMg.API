@@ -5,8 +5,6 @@ namespace InventoryMg.BLL.DTOs.Request
 {
     public class SalesRequestDto
     {
-        [Required(ErrorMessage = "UserId is required")]
-        public string UserId { get; set; }
         [Required(ErrorMessage = "Product Name is required")]
         public string Name { get; set; }
 

@@ -7,6 +7,7 @@ using InventoryMg.DAL.Entities;
 using InventoryMg.DAL.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 using KeyNotFoundException = InventoryMg.BLL.Exceptions.KeyNotFoundException;
 using NotImplementedException = InventoryMg.BLL.Exceptions.NotImplementedException;
 
@@ -18,21 +19,25 @@ namespace InventoryMg.BLL.Implementation
         private readonly IRepository<Product> _productRepo;
         private readonly UserManager<UserProfile> _userManager;
         private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ProductService(IUnitOfWork unitOfWork, UserManager<UserProfile> userManager, IMapper mapper)
+        public ProductService(IUnitOfWork unitOfWork, UserManager<UserProfile> userManager, 
+            IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _unitOfWork = unitOfWork;
             _productRepo = _unitOfWork.GetRepository<Product>();
             _userManager = userManager;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<ProductResult> AddProductAsync(ProductViewRequest product)
         {
-            var userExist = await _userManager.FindByIdAsync(product.UserId.ToString());
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userExist = await _userManager.FindByIdAsync(userId);
 
             if (userExist == null)
-                throw new KeyNotFoundException($"User Id: {product.UserId} does not match with the product");
+                throw new KeyNotFoundException($"User Id: {userId} does not match with the product");
             var newProd = _mapper.Map<Product>(product);
             var createdProduct = await _productRepo.AddAsync(newProd);
 
@@ -57,6 +62,10 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<ProductResult> DeleteProductAsync(Guid prodId)
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("User not logged in");
+
             Product productToDelete = await _productRepo.GetSingleByAsync(p => p.Id == prodId);
             if (productToDelete == null)
                 throw new NotFoundException($"Invalid product id: {prodId}");
@@ -75,9 +84,13 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<ProductResult> EditProductAsync(ProductView product)
         {
-            UserProfile user = await _userManager.FindByIdAsync(product.UserId.ToString());
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("User not logged in");
+
+            UserProfile user = await _userManager.FindByIdAsync(userId);
             if (user == null)
-                throw new NotFoundException($"User with id: {product.UserId} not found");
+                throw new NotFoundException($"User with id: {userId} not found");
 
             Product userProduct = await _productRepo.GetSingleByAsync(p => p.Id == product.Id);
 
@@ -112,8 +125,9 @@ namespace InventoryMg.BLL.Implementation
             throw new NotFoundException($"Product with id: {product.Id} not found");
         }
 
-        public async Task<IEnumerable<ProductView>> GetAllUserProducts(string id)
+        public async Task<IEnumerable<ProductView>> GetAllUserProducts()
         {
+            var id = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             UserProfile user = await _userManager.FindByIdAsync(id);
             if (user == null)
                 throw new NotFoundException("User not found");
@@ -127,6 +141,9 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<ProductView> GetProductById(Guid prodId)
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("User not logged in");
             Product product = await _productRepo.GetByIdAsync(prodId);
             if (product == null) throw new NotFoundException("Invalid Id");
             var toReturn = _mapper.Map<ProductView>(product);
@@ -135,6 +152,10 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<string> UploadProductImage(string prodId, IFormFile file)
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("User not logged in");
+
             var product = await _productRepo.GetSingleByAsync(p => p.Id.ToString() == prodId);
             if (product == null)
                 throw new NotFoundException("Product with id {prodId} not found");

@@ -17,7 +17,6 @@ namespace InventoryMg.BLL.DTOs.Request
         public decimal Price { get; set; }
         [Required, StringLength(50, ErrorMessage = "Product brandname should be between 5 to 50 characters", MinimumLength = 2)]
         public string BrandName { get; set; }
-        [Required]
-        public Guid UserId { get; set; }
+       
     }
 }

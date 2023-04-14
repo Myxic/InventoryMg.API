@@ -9,7 +9,7 @@ namespace InventoryMg.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "admin")]
     public class RoleController : ControllerBase
     {
         private readonly IRoleService _roleService;

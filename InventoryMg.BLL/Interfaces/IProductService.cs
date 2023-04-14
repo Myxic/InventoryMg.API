@@ -11,7 +11,7 @@ namespace InventoryMg.BLL.Interfaces
 {
     public interface IProductService
     {
-        Task<IEnumerable<ProductView>> GetAllUserProducts(string id);
+        Task<IEnumerable<ProductView>> GetAllUserProducts();
        Task<ProductResult> AddProductAsync(ProductViewRequest product);
         Task<ProductView> GetProductById(Guid prodId);
 

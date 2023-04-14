@@ -5,7 +5,9 @@ using InventoryMg.BLL.Exceptions;
 using InventoryMg.BLL.Interfaces;
 using InventoryMg.DAL.Entities;
 using InventoryMg.DAL.Repository;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 using NotImplementedException = InventoryMg.BLL.Exceptions.NotImplementedException;
 
 namespace InventoryMg.BLL.Implementation
@@ -17,20 +19,28 @@ namespace InventoryMg.BLL.Implementation
         private readonly UserManager<UserProfile> _userManager;
         private readonly IMapper _mapper;
         private readonly IRepository<Product> _productRepo;
+        private readonly HttpContextAccessor _httpContextAccessor;
 
-        public SalesServices(IUnitOfWork unitOfWork, UserManager<UserProfile> userManager, IMapper mapper)
+
+        public SalesServices(IUnitOfWork unitOfWork, UserManager<UserProfile> userManager,
+            IMapper mapper, HttpContextAccessor httpContextAccessor)
         {
             _unitOfWork = unitOfWork;
             _saleRepo = unitOfWork.GetRepository<Sale>();
             _userManager = userManager;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
             _productRepo = unitOfWork.GetRepository<Product>();
         }
         public async Task<SalesResponseDto> AddSale(SalesRequestDto model)
         {
-            UserProfile existingUser = await _userManager.FindByIdAsync(model.UserId);
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("User not logged in");
+
+            UserProfile existingUser = await _userManager.FindByIdAsync(userId);
             if (existingUser == null)
-                throw new NotFoundException($"User with id: {model.UserId} not found");
+                throw new NotFoundException($"User with id: {userId} not found");
 
             Product existingProduct = await _productRepo.GetByIdAsync(new Guid(model.ProductId));
             if (existingProduct == null)
@@ -51,12 +61,15 @@ namespace InventoryMg.BLL.Implementation
             return _mapper.Map<SalesResponseDto>(addedSale);
         }
 
-        public async Task<bool> DeleteSale(Guid userId, Guid saleId)
+        public async Task<bool> DeleteSale(Guid saleId)
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("User not logged in");
             var sale = await _saleRepo.GetByIdAsync(saleId);
             if (sale == null)
                 throw new NotFoundException($"Sale with id {saleId}  not found");
-            if (sale.UserId != userId)
+            if (sale.UserId.ToString() != userId)
                 throw new BadRequestException($"User Id invalid");
 
             await _saleRepo.DeleteAsync(sale);
@@ -65,9 +78,13 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<SalesResponseDto> EditSale(SalesResponseDto model)
         {
-            UserProfile user = await _userManager.FindByIdAsync(model.UserId.ToString());
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("User not logged in");
+
+            UserProfile user = await _userManager.FindByIdAsync(userId);
             if (user == null)
-                throw new NotFoundException($"User with id: {model.UserId} not found");
+                throw new NotFoundException($"User with id: {userId} not found");
 
             Sale userSale = await _saleRepo.GetSingleByAsync(s => s.Id == model.Id);
 
@@ -89,6 +106,10 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<SalesResponseDto> GetSaleById(Guid SaleId)
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("User not logged in");
+
             var sale = await _saleRepo.GetByIdAsync(SaleId);
             if (sale == null)
                 throw new NotFoundException("Sale id not found");
@@ -96,10 +117,13 @@ namespace InventoryMg.BLL.Implementation
             return _mapper.Map<SalesResponseDto>(sale);
         }
 
-        public IEnumerable<SalesResponseDto> GetUserSales(Guid UserId)
+        public IEnumerable<SalesResponseDto> GetUserSales()
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("User not logged in");
             // = await  _saleRepo.GetByAsync(s => s.UserId == UserId);
-            var sales = _saleRepo.GetQueryable(p => p.UserId == UserId).OrderBy(i => i.Id);
+            var sales = _saleRepo.GetQueryable(p => p.UserId.ToString() == userId).OrderBy(i => i.Id);
             if (sales == null)
                 throw new NotFoundException("User id was incorrect");
             return _mapper.Map<IEnumerable<SalesResponseDto>>(sales);

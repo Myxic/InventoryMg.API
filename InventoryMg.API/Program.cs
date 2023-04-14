@@ -115,6 +115,7 @@ namespace InventoryMg.API
                 .AddDefaultTokenProviders();
 
             builder.Services.RegisterServices();
+            builder.Services.AddHttpContextAccessor();
 
             builder.Services.AddAutoMapper(Assembly.Load("InventoryMg.BLL"));
             var app = builder.Build();
