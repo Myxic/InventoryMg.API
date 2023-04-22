@@ -18,7 +18,7 @@ namespace InventoryMg.DAL.Seed
                 FullName = "Admin One",
                 Email = "admin@domain.com",
                 Phone = "2233445566",
-                Password = "Pass12345@"
+               Password = "Pass12345@"
             };
             using var scope = app.ApplicationServices.CreateScope();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
@@ -27,20 +27,20 @@ namespace InventoryMg.DAL.Seed
             if (!await roleManager.RoleExistsAsync("admin"))
             {
                 await roleManager.CreateAsync(new AppRole("admin"));
+                await roleManager.CreateAsync(new AppRole("Customer"));
             }
-
-            if (!await appDbContext.Users.AnyAsync())
+            var result = await userManager.CreateAsync(admin, admin.Password);
+            if (result.Succeeded)
             {
-                // var result = await userManager.CreateAsync(admin, "AdminPass12345@");
-            var result =    await appDbContext.Users.AddAsync(admin);
-
-                if (result != null)
-                { 
-                    await userManager.AddToRoleAsync(admin, "admin");
-                }
-                // await appDbContext.Users.AddAsync(AddAdmin());
-               await appDbContext.SaveChangesAsync();
+                await userManager.AddToRoleAsync(admin, "SuperAdmin");
             }
+
+            /* if (!await appDbContext.Users.AnyAsync())
+             {
+
+                 // await appDbContext.Users.AddAsync(AddAdmin());
+                await appDbContext.SaveChangesAsync();
+             }*/
         }
 
       
