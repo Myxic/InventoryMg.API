@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.Numerics;
 
 namespace InventoryMg.DAL.Seed
 {
@@ -12,7 +13,13 @@ namespace InventoryMg.DAL.Seed
         {
             ApplicationDbContext appDbContext = app.ApplicationServices.CreateScope().ServiceProvider
                 .GetRequiredService<ApplicationDbContext>();
-
+            UserProfile admin = new UserProfile()
+            {
+                FullName = "Admin One",
+                Email = "admin@domain.com",
+                Phone = "2233445566",
+                Password = "Pass12345@"
+            };
             using var scope = app.ApplicationServices.CreateScope();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<UserProfile>>();
@@ -24,26 +31,19 @@ namespace InventoryMg.DAL.Seed
 
             if (!await appDbContext.Users.AnyAsync())
             {
-                var result = await userManager.CreateAsync(AddAdmin(), "AdminPass12345@");
+                // var result = await userManager.CreateAsync(admin, "AdminPass12345@");
+            var result =    await appDbContext.Users.AddAsync(admin);
 
-                if (result.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(AddAdmin(), "admin");
+                if (result != null)
+                { 
+                    await userManager.AddToRoleAsync(admin, "admin");
                 }
                 // await appDbContext.Users.AddAsync(AddAdmin());
-                await appDbContext.SaveChangesAsync();
+               await appDbContext.SaveChangesAsync();
             }
         }
 
-        private static UserProfile AddAdmin()
-        {
-            return new UserProfile()
-            {
-                FullName = "Admin One",
-                Email = "admin@domain.com",
-                Phone = "2233445566"
-            };
-        }
+      
 
 
 

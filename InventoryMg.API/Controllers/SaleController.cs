@@ -35,7 +35,7 @@ namespace InventoryMg.API.Controllers
             var response = await _salesServices.AddSale(model);
             if (response != null)
             {
-                return StatusCode(201,response);
+                return StatusCode(201, response);
             }
 
             return BadRequest("something went wrong");
@@ -49,7 +49,7 @@ namespace InventoryMg.API.Controllers
         [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
         public IActionResult GetUserSales()
         {
-           
+
             var sales = _salesServices.GetUserSales();
             return Ok(sales);
         }
@@ -66,7 +66,7 @@ namespace InventoryMg.API.Controllers
             {
                 return Ok("Sale deleted");
             }
-            return BadRequest(new {message ="Unable to delete", status = result});
+            return BadRequest(new { message = "Unable to delete", status = result });
         }
 
         [HttpGet("get-sale-by-id")]

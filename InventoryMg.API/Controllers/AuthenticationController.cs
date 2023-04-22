@@ -2,7 +2,10 @@
 using InventoryMg.BLL.DTOs.Request;
 using InventoryMg.BLL.DTOs.Response;
 using InventoryMg.BLL.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace InventoryMg.API.Controllers
 {
@@ -17,8 +20,11 @@ namespace InventoryMg.API.Controllers
             _authenticationService = authenticationService;
         }
 
-        [HttpPost]
-        [Route("Register")]
+        [HttpPost("Register")]
+        [SwaggerOperation(Summary = "Register a new user", Description = "Does not Require authorization")]
+        [SwaggerResponse(StatusCodes.Status201Created, "Return a auth result")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Not Found")]
         public async Task<IActionResult> Register([FromBody] UserRegistration userRegistrationRequestDto)
         {
             if (ModelState.IsValid)
@@ -43,8 +49,11 @@ namespace InventoryMg.API.Controllers
             });
         }
 
-        [HttpPost]
-        [Route("Login")]
+        [HttpPost("Login")]
+        [SwaggerOperation(Summary = "User Login", Description = "Does not Require authorization")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Return a jwt token")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Not Found")]
         public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
             if (ModelState.IsValid)
@@ -76,8 +85,12 @@ namespace InventoryMg.API.Controllers
             });
         }
 
-        [HttpPost]
-        [Route("RefreshToken")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost("RefreshToken")]
+        [SwaggerOperation(Summary = "Get a new Token", Description = "Requires  authorization")]
+        [SwaggerResponse(StatusCodes.Status200OK, "Return a new jwt token")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal server error")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Not Found")]
         public async Task<IActionResult> RefreshToken([FromBody] TokenRequest tokenRequest)
         {
             if (ModelState.IsValid)

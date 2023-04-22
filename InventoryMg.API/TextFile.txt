@@ -1,0 +1,69 @@
+﻿public class Seed
+    {
+        public static async Task EnsurePopulatedAsync(IApplicationBuilder app)
+        {
+            WvmsDbContext wvmsDbContext = app.ApplicationServices.CreateScope().ServiceProvider
+                .GetRequiredService<WvmsDbContext>();
+
+            if (!await wvmsDbContext.Vendors.AnyAsync())
+            {
+                await wvmsDbContext.Vendors.AddRangeAsync(VendorsWithProducts());
+                await wvmsDbContext.SaveChangesAsync();
+            }
+        }
+        private static IEnumerable<Vendor> VendorsWithProducts()
+        {
+            return new List<Vendor>
+            {
+                new Vendor ()
+                {
+                  FullName = "John Doe",  Email = "john@example.com", Address = "123 Main St", PhoneNumber = "123-5555",
+
+                  Products= new List<Product> {
+                    new Product { ProductName = "Aquafina Water", Description = "Pure, refreshing bottled water",Price = 1.99m, Quantity = 5000},
+                    new Product{ ProductName = "Swarm Water", Description = "Clear spring water", Price = 3.99m, Quantity = 3500},
+                    new Product{ ProductName =  "Flavoured Water", Description = "Delicious, fruity flavored water", Price = 4.99m, Quantity = 4400}
+                  }
+                },
+
+                new Vendor ()
+                {
+                    FullName = "Jane Doe", Email = "jane2@example.com", Address = "456 Oak St", PhoneNumber = "456-7777",
+                    Products = new List<Product> {
+                    new Product { ProductName = "Idyllic Water", Description = "Fizzing, refreshing sparkling water",Price = 2.99m, Quantity = 7000},
+                    new Product { ProductName = "Townhall Water", Description = "Nice sparkling water",Price = 1.99m, Quantity = 7000},
+                    new Product { ProductName = "Eva Water", Description = "Refreshing drinking water",Price = 2.99m, Quantity = 8000},
+                    new Product{ ProductName = "Swarm Water", Description = "Clear spring water", Price = 3.00m, Quantity = 7500} }
+
+                },
+
+
+            };
+        }
+    }
+}
+
+using var scope = app.Services.CreateScope();
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+
+            //seeding a superadmin with a superadmin role
+            if(!await roleManager.RoleExistsAsync("SuperAdmin"))
+            {
+                await roleManager.CreateAsync(new IdentityRole("SuperAdmin"));
+            }
+
+            // Create the SuperAdmin user with the role
+            var superAdmin = new AppUser
+            {
+                FirstName = "Admin",
+                LastName = "Admin",
+                UserName = "superadmin@admin.com",
+                Email = "superadmin@admin.com"
+            };
+
+            var result = await userManager.CreateAsync(superAdmin, "Adminpass@123");
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(superAdmin, "SuperAdmin");
+            }

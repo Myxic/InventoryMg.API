@@ -2,8 +2,10 @@
 using InventoryMg.BLL.Exceptions;
 using InventoryMg.BLL.Interfaces;
 using InventoryMg.DAL.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using System.Xml.Linq;
 
 namespace InventoryMg.BLL.Implementation
@@ -12,18 +14,24 @@ namespace InventoryMg.BLL.Implementation
     {
         private readonly UserManager<UserProfile> _userManger;
         private readonly RoleManager<AppRole> _roleManager;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
         public RoleService(
             UserManager<UserProfile> userManger,
-            RoleManager<AppRole> roleManager
+            RoleManager<AppRole> roleManager,
+            IHttpContextAccessor httpContextAccessor
             )
         {
             _userManger = userManger;
             _roleManager = roleManager;
-
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<RoleResult> AddUserToRole(string email, string roleName)
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("Invalid User id please authenticate");
             //check if user exist
             var user =  await _userManger.FindByEmailAsync(email);
             if(user == null )
@@ -54,6 +62,9 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<RoleResult> CreateRole(string name)
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("Invalid User id please authenticate");
             //check if role already exits
             var roleExits = await _roleManager.RoleExistsAsync(name);
 
@@ -79,12 +90,18 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<IEnumerable<AppRole>> GetAllRoles()
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("Invalid User id please authenticate");
             var roles = await _roleManager.Roles.ToListAsync();
             return roles;
         }
 
         public async Task<IEnumerable<UserProfile>> GetAllUser()
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("Invalid User id please authenticate");
             var users = await _userManger.Users.ToListAsync();
             return users;
 
@@ -92,6 +109,9 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<IList<string>> GetUserRoles(string email)
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("Invalid User id please authenticate");
             //check if email is valid
             var user = await _userManger.FindByEmailAsync(email);
             if(user == null)
@@ -106,6 +126,9 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<RoleResult> RemoveUserFromRole(string email, string roleName)
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("Invalid User id please authenticate");
             //check user exist
             var user = await _userManger.FindByEmailAsync(email);
             if (user == null)

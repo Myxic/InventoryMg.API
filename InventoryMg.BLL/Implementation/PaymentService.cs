@@ -4,9 +4,11 @@ using InventoryMg.BLL.Exceptions;
 using InventoryMg.BLL.Interfaces;
 using InventoryMg.DAL.Entities;
 using InventoryMg.DAL.Repository;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using PayStack.Net;
+using System.Security.Claims;
 
 namespace InventoryMg.BLL.Implementation
 {
@@ -18,29 +20,36 @@ namespace InventoryMg.BLL.Implementation
         private readonly IRepository<Transaction> _transRepo;
         private readonly string token;
         private readonly UserManager<UserProfile> _userManager;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         private PayStackApi PayStack { get; set; }
 
-        public PaymentService(IUnitOfWork unitOfWork, IConfiguration configuration, IMapper mapper, UserManager<UserProfile> userManager)
+        public PaymentService(IUnitOfWork unitOfWork,
+            IConfiguration configuration, IMapper mapper,
+            UserManager<UserProfile> userManager, IHttpContextAccessor httpContextAccessor)
         {
             _unitOfWork = unitOfWork;
             _transRepo = _unitOfWork.GetRepository<Transaction>();
             _configuration = configuration;
             _mapper = mapper;
             _userManager = userManager;
+            _httpContextAccessor = httpContextAccessor;
             token = _configuration["Payment:PaystackTestKey"];
             PayStack = new PayStackApi(token);
         }
         public async Task<TransactionInitializeResponse> InitalizePayment(PaymentRequest request)
         {
-            var user = await _userManager.FindByIdAsync(request.UserId);
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("Invalid User id please authenticate");
+            UserProfile user = await _userManager.FindByIdAsync(userId);
             if (user == null)
-                throw new NotFoundException($"User with id {request.UserId} not found");
+                throw new NotFoundException($"User with id {userId} not found");
 
             TransactionInitializeRequest createRequest = new()
             {
                 AmountInKobo = request.Amount * 100,
-                Email = request.Email,
+                Email = user.Email,
                 Currency = "NGN",
                 Reference = Generate().ToString(),
                 CallbackUrl = "https://localhost:7242/api/Payment/verify-payment"
@@ -51,12 +60,12 @@ namespace InventoryMg.BLL.Implementation
             {
                 var transaction = new Transaction()
                 {
-                    Name = request.Name,
+                    Name = user.FullName,
                     Amount = request.Amount,
                     TrxnRef = createRequest.Reference,
-                    Email = request.Email,
+                    Email = user.Email,
                     Status = false,
-                    UserId = new Guid(request.UserId)
+                    UserId = new Guid(userId)
 
                 };
                 await _transRepo.AddAsync(transaction);
@@ -68,6 +77,9 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<TransactionVerifyResponse> VerifyPayment(string reference)
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("Invalid User id please authenticate");
             TransactionVerifyResponse response = PayStack.Transactions.Verify(reference);
             if (response.Data.Status == "success")
             {
@@ -92,6 +104,10 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<IEnumerable<Transaction>> GetPayments()
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("Invalid User id please authenticate");
+
             var payments = await _transRepo.GetAllAsync();
             if (payments != null)
             {
@@ -103,7 +119,9 @@ namespace InventoryMg.BLL.Implementation
 
         public async Task<Transaction> GetPaymentByid(string id)
         {
-
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("Invalid User id please authenticate");
             var result = await _transRepo.GetByIdAsync(new Guid(id));
             if (result != null)
             {

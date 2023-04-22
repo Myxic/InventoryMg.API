@@ -1,6 +1,7 @@
 using InventoryMg.BLL.Extensions;
 using InventoryMg.DAL.Configurations;
 using InventoryMg.DAL.Entities;
+using InventoryMg.DAL.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
@@ -14,7 +15,7 @@ namespace InventoryMg.API
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -136,7 +137,11 @@ namespace InventoryMg.API
             app.MapControllers();
             app.AddGlobalErrorHandler();
 
+
+            await SeedData.EnsurePopulatedAsync(app);
             app.Run();
+
+           
         }
     }
 }

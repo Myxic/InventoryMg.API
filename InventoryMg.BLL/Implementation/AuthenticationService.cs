@@ -5,6 +5,7 @@ using InventoryMg.BLL.DTOs.Response;
 using InventoryMg.BLL.Exceptions;
 using InventoryMg.BLL.Interfaces;
 using InventoryMg.DAL.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -24,10 +25,13 @@ namespace InventoryMg.BLL.Implementation
         private readonly IMapper _mapper;
         private readonly ApplicationDbContext _dbContext;
         private readonly TokenValidationParameters _tokenValidationParameters;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public AuthenticationService(UserManager<UserProfile> userManager,
             IConfiguration configuration, RoleManager<AppRole> roleManager,
-            IMapper mapper, ApplicationDbContext dbContext, TokenValidationParameters tokenValidationParameters)
+            IMapper mapper, ApplicationDbContext dbContext,
+            TokenValidationParameters tokenValidationParameters,
+            IHttpContextAccessor httpContextAccessor)
         {
             _userManager = userManager;
             //   _jwtConfig = jwtConfig;
@@ -36,6 +40,7 @@ namespace InventoryMg.BLL.Implementation
             _mapper = mapper;
             _dbContext = dbContext;
             _tokenValidationParameters = tokenValidationParameters;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<AuthResult> CreateUser(UserRegistration request)
@@ -59,12 +64,8 @@ namespace InventoryMg.BLL.Implementation
 
             var token = await GenerateJwtToken(user);
 
-
             return token;
         }
-
-
-
         public async Task<AuthenticationResponse> UserLogin(LoginRequest request)
         {
             var existingUser = await _userManager.FindByEmailAsync(request.Email);
@@ -86,10 +87,11 @@ namespace InventoryMg.BLL.Implementation
             };
 
         }
-
-
         public async Task<AuthResult> GetNewJwtRefreshToken(TokenRequest tokenRequest)
         {
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                throw new NotFoundException("Invalid User id please authenticate");
             var result = await VerifyAndGenerateToken(tokenRequest);
             if (result.Result == false)
                 throw new Exceptions.NotImplementedException("Invalid Tokens");
@@ -141,7 +143,6 @@ namespace InventoryMg.BLL.Implementation
                 Errors = null
             };
         }
-
         private async Task<IList<Claim>> GetAllValidClaims(UserProfile user)
         {
             var _options = new IdentityOptions();
@@ -164,7 +165,7 @@ namespace InventoryMg.BLL.Implementation
             //convert roles to claims
             foreach (var userRole in userRoles)
             {
-               
+
                 var role = await _roleManager.FindByNameAsync(userRole);
                 if (role != null)
                 {
@@ -177,7 +178,7 @@ namespace InventoryMg.BLL.Implementation
                     }
                 }
 
-                
+
             }
             return claims;
 
@@ -189,7 +190,6 @@ namespace InventoryMg.BLL.Implementation
             return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
 
         }
-
         private async Task<AuthResult> VerifyAndGenerateToken(TokenRequest tokenRequest)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
@@ -315,7 +315,6 @@ namespace InventoryMg.BLL.Implementation
                             }
             };
         }
-
         private DateTime UnixTimeStampToDateTime(long unixTimeStamp)
         {
             var dateTimeVal = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
